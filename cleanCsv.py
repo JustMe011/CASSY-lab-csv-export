@@ -6,6 +6,10 @@ import os
 import csv
 import string
 
+# TODO:
+# - Insert first line with column names
+# - Add options to delete single columns (readedFile will become 2d array instead of list of strings)
+
 def main():
 	inputFile=Path.cwd()
 	outputFile=Path.cwd()
@@ -14,19 +18,26 @@ def main():
 	parser.add_argument("-o", "--output", dest="outputFile", help="output file")
 
 	args = parser.parse_args()
+
 	inputFile=inputFile / args.inputFile
 
 	outputFileName = args.outputFile if args.outputFile else args.inputFile
-	checkCsvExtension(outputFileName)
+	outputFileName =checkCsvExtension(outputFileName)
 	outputFile = outputFile / outputFileName
 
 	readedFile = removeFirstLines(str(inputFile))
+
 	readedFile = replaceCommaAndDel(readedFile)
+	#print(readedFile)
 	writeNewFile(readedFile,str(outputFile))
  
 def removeFirstLines(fileName):
+
 	with open(fileName,'r', encoding = "ISO-8859-1") as inputFileStream:
 		fileLines = inputFileStream.readlines()
+		if not fileLines:
+			print('Error: Input file is empty\nExiting...')
+			exit(0)
 		inputFileStream.seek(0)
 		lineCounter=0
 		readedFile=list()
@@ -34,6 +45,7 @@ def removeFirstLines(fileName):
 			if lineCounter>4:
 				readedFile.append(i)
 			lineCounter = lineCounter + 1
+
 	return readedFile
 	
 def replaceCommaAndDel(stringsToReplace):
@@ -41,9 +53,14 @@ def replaceCommaAndDel(stringsToReplace):
 	for row in stringsToReplace:
 		newLine=str()
 		newLine = row.replace(',','.')
+		
 		newLine = newLine.replace('\t',',')
+		if newLine[len(newLine)-2] == ',':
+			newLine = newLine[:len(newLine)-2]+newLine[len(newLine)-1:]
+		if newLine[len(newLine)-1] == ',':
+			newLine = newLine[:len(newLine)-1]
 		newFile.append(newLine)
-	print(newFile)	
+	return newFile
 
 def writeNewFile(readedFileList, outputFileName):
 	with open(outputFileName,'w') as outputFile:
@@ -52,12 +69,14 @@ def writeNewFile(readedFileList, outputFileName):
 			outputFile.write(row)
 	
 def checkCsvExtension(fileName):
-	fileNameLen=len(fileName.split('.'))
-	if  fileNameLen == 1 or not fileName.split('.')[2]:
-		fileName += 'csv' if '.' in fileName else '.csv'
-	elif fileNameLen > 2:
+	newFileName=str()
+	sFileName = fileName.split('.')
+	fileNameLen=len(sFileName)
+	if fileNameLen > 2:
 		print('Output filename error\nExiting...')
 		exit(0)
+	newFileName = sFileName[0] + '.csv'
+	return newFileName
 	
 if __name__ == "__main__":
 	main()
